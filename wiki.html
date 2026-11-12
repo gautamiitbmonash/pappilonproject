@@ -1,0 +1,446 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Pappilon Wiki</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=DM+Sans:wght@400;500;700&display=swap">
+<style>
+/* Layout: sticky sidebar (search + page list) beside a single article column; one article visible at a time, routed by hash. */
+:root{
+  --bg:#fff9f0; --surface:#ffffff; --side:#fdf0de; --fg:#2b1740; --muted:#5f5173; --line:#ead9c4;
+  --accent:#a3360f; --orange:#f28c28; --violet:#6b3fd4; --tip:#fff0c2; --warn:#ffdcc7; --plain:#e9e1ff;
+  --ph-bg:#eaf1ff; --ph-line:#2d6cdf; --ph-fg:#1b4aa8; --ph-sub:#3f4d70; --inkbtn:#2b1740; --inkfg:#fff;
+  --wing1:#ffe3bd; --wing2:#e5dbff;
+  --display:'Bricolage Grotesque','DM Sans',system-ui,sans-serif; --body:'DM Sans',system-ui,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#1a1026; --surface:#261838; --side:#21142f; --fg:#f4ecfb; --muted:#b9a9cc; --line:#3b2a52;
+  --accent:#ffa36b; --orange:#f5a04a; --violet:#a68bff; --tip:#4a3a16; --warn:#4d2a1c; --plain:#33274f;
+  --ph-bg:#14243f; --ph-line:#5b93f0; --ph-fg:#a9c7ff; --ph-sub:#9db2d6; --inkbtn:#f4ecfb; --inkfg:#1a1026;
+  --wing1:#3a2a1c; --wing2:#2c2147; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#1a1026; --surface:#261838; --side:#21142f; --fg:#f4ecfb; --muted:#b9a9cc; --line:#3b2a52;
+  --accent:#ffa36b; --orange:#f5a04a; --violet:#a68bff; --tip:#4a3a16; --warn:#4d2a1c; --plain:#33274f;
+  --ph-bg:#14243f; --ph-line:#5b93f0; --ph-fg:#a9c7ff; --ph-sub:#9db2d6; --inkbtn:#f4ecfb; --inkfg:#1a1026;
+  --wing1:#3a2a1c; --wing2:#2c2147; color-scheme:dark}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.6 var(--body);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0}
+a{color:var(--accent)}
+.shell{display:grid;grid-template-columns:270px minmax(0,1fr);gap:40px;max-width:1180px;margin:0 auto}
+.side{position:sticky;top:0;align-self:start;max-height:100vh;overflow:auto;padding:22px 0 28px;display:flex;flex-direction:column;gap:14px}
+.brand{display:flex;align-items:center;gap:10px;font:800 22px var(--display);letter-spacing:-.02em;text-decoration:none;color:var(--fg)}
+.brand small{display:block;font:500 12px var(--body);letter-spacing:.04em;color:var(--muted)}
+.search{width:100%;font:inherit;font-size:14px;padding:9px 14px;border-radius:999px;border:1.5px solid var(--line);background:var(--surface);color:var(--fg)}
+.search:focus-visible,.nav a:focus-visible,.btn:focus-visible,.menu-btn:focus-visible{outline:2.5px solid var(--violet);outline-offset:2px}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav h6{margin:14px 0 4px;font:700 11px var(--body);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.nav a{display:block;padding:6px 12px;border-radius:14px 4px 14px 4px;text-decoration:none;color:var(--fg);font-size:14.5px}
+.nav a:hover{background:var(--side)}
+.nav a[aria-current="page"]{background:var(--inkbtn);color:var(--inkfg);font-weight:700}
+.nav a[hidden]{display:none}
+.menu-btn{display:none}
+.themebtn{align-self:flex-start;font:700 12px var(--body);background:none;border:1.5px solid var(--line);color:var(--muted);border-radius:999px;padding:5px 12px;cursor:pointer}
+main{padding:40px 0 60px;min-width:0;position:relative;isolation:isolate}
+.wing{position:absolute;right:-60px;top:0;z-index:-1;width:300px;height:240px;pointer-events:none}
+.crumbs{font:700 12px var(--body);letter-spacing:.12em;text-transform:uppercase;color:var(--accent);display:flex;gap:8px;align-items:center}
+article{max-width:760px}
+article[hidden]{display:none}
+h1,h2,h3{font-family:var(--display);letter-spacing:-.02em;line-height:1.15;text-wrap:balance;color:var(--fg)}
+h1{font-size:clamp(32px,5vw,46px);font-weight:800;margin:8px 0 14px}
+h2{font-size:24px;font-weight:800;margin:34px 0 10px}
+h3{font-size:18px;font-weight:800;margin:20px 0 4px}
+p{margin:0 0 12px}
+.lead{font-size:19px;line-height:1.55;color:var(--muted);margin-bottom:20px}
+ul,ol{padding-left:22px;margin:0 0 14px}
+li{margin-bottom:5px}
+.shot{border:2px dashed var(--ph-line);border-radius:36px 8px 36px 8px;background:var(--ph-bg);color:var(--ph-fg);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:22px 16px;font-weight:700;font-size:14px;line-height:1.35;margin:16px 0;min-height:170px}
+.shot small{display:block;font-weight:500;color:var(--ph-sub);font-size:13px;margin-top:4px}
+.shot img{max-width:100%;border-radius:12px}
+.note{display:flex;gap:12px;align-items:flex-start;border-radius:22px 6px 22px 6px;padding:12px 16px;font-size:15px;line-height:1.5;margin:16px 0}
+.note .lbl{flex:none;font:700 11px var(--body);letter-spacing:.1em;text-transform:uppercase;padding:2px 10px;border-radius:999px;background:var(--inkbtn);color:var(--inkfg);margin-top:3px}
+.tip{background:var(--tip)}.warn{background:var(--warn)}.plain{background:var(--plain)}
+.steps{list-style:none;padding:0;margin:14px 0;counter-reset:s}
+.steps li{counter-increment:s;display:flex;gap:14px;align-items:flex-start;margin-bottom:14px}
+.steps li::before{content:counter(s);flex:none;width:34px;height:34px;border-radius:50% 11px 50% 11px;background:var(--inkbtn);color:var(--inkfg);font:800 16px var(--display);display:flex;align-items:center;justify-content:center}
+.steps li>div{min-width:0}
+.steps b.t{display:block;font:800 16px var(--display);margin-bottom:1px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:16px 0}
+.card{background:var(--surface);border-radius:28px 8px 28px 8px;padding:14px 18px;box-shadow:0 3px 12px rgba(43,23,64,.09);min-width:0}
+.card h3{margin:0 0 4px;font-size:16px}
+.card p{font-size:14.5px;margin:0;color:var(--muted)}
+.stages{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin:18px 0}
+.stage{background:var(--surface);border-radius:30px 8px 30px 8px;padding:14px;box-shadow:0 3px 12px rgba(43,23,64,.09)}
+.stage i{font:800 12px var(--display);font-style:normal;color:var(--accent);letter-spacing:.1em;text-transform:uppercase}
+.stage b{display:block;font:800 18px var(--display);margin:2px 0}
+.stage span{font-size:13.5px;color:var(--muted);line-height:1.4;display:block}
+dl{margin:0}
+dt{font:800 15px var(--display);margin-top:12px}
+dd{margin:0 0 4px;color:var(--muted)}
+.lenses{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin:16px 0}
+.lens{background:var(--surface);border-radius:30px 8px 30px 8px;overflow:hidden;box-shadow:0 3px 12px rgba(43,23,64,.09)}
+.lens .hd{padding:12px 16px;color:#fff}
+.lens .hd b{display:block;font:800 11px var(--display);letter-spacing:.12em;text-transform:uppercase;opacity:.95}
+.lens .hd h3{color:#fff;margin:2px 0 0;font-size:16px}
+.lens .bd{padding:10px 16px 12px}
+.lens .bd p{font-size:14px;color:var(--muted)}
+.lens ul{list-style:none;padding:0;margin:0}
+.lens li{font-size:14px;margin:0;padding:3px 0;display:flex;gap:8px;align-items:center}
+.lens li::before{content:"";flex:none;width:9px;height:9px;border-radius:50% 0 50% 0;background:var(--c)}
+.faces{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.faces span{flex:1 1 90px;text-align:center;font:700 12.5px var(--body);border-radius:14px 4px 14px 4px;padding:5px 4px;color:#2b1740}
+kbd{display:inline-block;min-width:30px;text-align:center;font:700 12.5px var(--body);background:var(--bg);color:var(--fg);border:1.5px solid var(--fg);border-bottom-width:3px;border-radius:8px;padding:1px 8px}
+.tblwrap{overflow-x:auto;margin:14px 0}
+table{border-collapse:collapse;width:100%;font-size:14.5px;min-width:480px}
+th{text-align:left;font:700 12px var(--body);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:6px 10px 6px 0;border-bottom:1.5px solid var(--line)}
+td{padding:8px 10px 8px 0;border-bottom:1px solid var(--line);vertical-align:top}
+.ph{background:var(--ph-bg);border:1.5px dashed var(--ph-line);color:var(--ph-fg);border-radius:8px;padding:0 6px;font-weight:700}
+.pager{display:flex;justify-content:space-between;gap:12px;margin-top:40px;padding-top:18px;border-top:1px solid var(--line);flex-wrap:wrap}
+.btn{display:inline-block;text-decoration:none;font:700 14px var(--body);padding:9px 16px;border-radius:999px;border:1.5px solid var(--line);color:var(--fg);background:var(--surface)}
+.btn:hover{border-color:var(--violet)}
+.cover{display:flex;gap:26px;align-items:center;flex-wrap:wrap;margin:10px 0 18px}
+.noresults{font-size:13px;color:var(--muted);padding:6px 12px}
+@media (max-width:860px){
+  .shell{grid-template-columns:minmax(0,1fr);gap:0}
+  .side{position:static;max-height:none;padding:14px 0 6px}
+  .menu-btn{display:inline-block;align-self:flex-start;font:700 13px var(--body);padding:8px 16px;border-radius:999px;border:1.5px solid var(--line);background:var(--surface);color:var(--fg);cursor:pointer}
+  .nav,.search{display:none}
+  .side.open .nav,.side.open .search{display:flex}
+  .wing{width:200px;height:160px;right:-50px}
+  main{padding-top:20px}
+}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+
+<div class="shell">
+<aside class="side" id="side">
+  <a class="brand" href="#welcome">
+    <svg width="40" height="32" viewBox="0 0 100 80" aria-hidden="true"><path d="M50 40C38 8 6 4 6 28c0 16 24 22 44 12z" fill="var(--orange)"/><path d="M50 40C62 8 94 4 94 28c0 16-24 22-44 12z" fill="var(--orange)"/><path d="M50 42C34 48 14 54 20 68c6 12 24 2 30-16z" fill="var(--violet)"/><path d="M50 42c16 6 36 12 30 26-6 12-24 2-30-16z" fill="var(--violet)"/><rect x="47.5" y="26" width="5" height="34" rx="2.5" fill="var(--fg)"/></svg>
+    <span>Pappilon<small>User wiki</small></span>
+  </a>
+  <button class="menu-btn" id="menuBtn" type="button" aria-expanded="false">Browse pages</button>
+  <input class="search" id="q" type="search" placeholder="Search this wiki" aria-label="Search this wiki" autocomplete="off">
+  <nav class="nav" id="nav" aria-label="Wiki pages"></nav>
+  <button class="themebtn" id="themeBtn" type="button">Switch theme</button>
+</aside>
+
+<main>
+<svg class="wing" viewBox="0 0 100 80" aria-hidden="true"><path d="M50 40C38 8 6 4 6 28c0 16 24 22 44 12z" fill="var(--wing1)"/><path d="M50 40C62 8 94 4 94 28c0 16-24 22-44 12z" fill="var(--wing1)"/><path d="M50 42C34 48 14 54 20 68c6 12 24 2 30-16z" fill="var(--wing2)"/><path d="M50 42c16 6 36 12 30 26-6 12-24 2-30-16z" fill="var(--wing2)"/></svg>
+
+<article id="welcome" data-group="Start here" data-title="Welcome">
+<div class="crumbs">Start here</div>
+<h1>Welcome to Pappilon</h1>
+<p class="lead">Pappilon is a free app for women who travel by public transport. You use it to record how places on your journey feel, so researchers can understand what makes them feel safe or unsafe.</p>
+<div class="shot">Screenshot placeholder<small>The Pappilon home screen on a phone<br>Suggested size 800 x 450 px</small></div>
+<h2>What you will do</h2>
+<p>You add the places you pass through on a map, look at a picture of each one, and drop small round pins on whatever you notice: a dark corner, a crowded door, a friendly shopkeeper. You give each pin a score and a short note. When you finish, you send your work to the research team.</p>
+<h2>What you do not need</h2>
+<ul><li>No technical skills. If you can use WhatsApp, you can use Pappilon.</li><li>No special phone. Any Android phone with Chrome works.</li><li>No real name. You sign in with a User ID the project gives you.</li></ul>
+<div class="note plain"><span class="lbl">Voluntary</span><span>Taking part is your choice. You can stop at any time without any consequences.</span></div>
+<div class="grid">
+<div class="card"><h3>New here?</h3><p>Start with <a href="#get-started">Getting started</a>.</p></div>
+<div class="card"><h3>Want the overview?</h3><p>Read <a href="#big-picture">The big picture</a>.</p></div>
+<div class="card"><h3>Something not working?</h3><p>Open <a href="#help">Help and FAQ</a>.</p></div>
+</div>
+</article>
+
+<article id="big-picture" data-group="Start here" data-title="The big picture" hidden>
+<div class="crumbs">Start here</div>
+<h1>The big picture</h1>
+<p class="lead">Every outing with Pappilon moves through the same five stages, like a butterfly through its life. Once you know them, every screen makes sense.</p>
+<div class="stages">
+<div class="stage"><i>Stage 1</i><b>Add</b><span>Put places on the map.</span></div>
+<div class="stage"><i>Stage 2</i><b>Look</b><span>See a picture of each place.</span></div>
+<div class="stage"><i>Stage 3</i><b>Pin</b><span>Mark what you notice.</span></div>
+<div class="stage"><i>Stage 4</i><b>Settle</b><span>Finish the place with one rating.</span></div>
+<div class="stage"><i>Stage 5</i><b>Send off</b><span>Pack it up and share it.</span></div>
+</div>
+<div class="shot">Screenshot placeholder<small>The map with places and the picture panel side by side<br>Suggested size 800 x 400 px</small></div>
+<h2>Words you will meet</h2>
+<dl>
+<dt>Session</dt><dd>One outing or one journey. Everything you record is kept inside a session.</dd>
+<dt>Point or place</dt><dd>A spot on the map you want to describe, such as a bus stop or a crossing.</dd>
+<dt>Panorama</dt><dd>A picture you can look around in, like turning your head on the spot.</dd>
+<dt>Pin</dt><dd>A round marker you place on the picture to describe one thing.</dd>
+<dt>Lens</dt><dd>A way of looking at a place. There are three, and each has its own icons.</dd>
+<dt>Icon</dt><dd>A small symbol for something you can notice, such as light or staring.</dd>
+<dt>Score</dt><dd>A number from 1 (very unsafe) to 5 (very safe).</dd>
+<dt>Tag</dt><dd>A short word that adds detail, such as "dark patch".</dd>
+<dt>Gut check</dt><dd>One last rating for how the whole place feels.</dd>
+<dt>Export</dt><dd>Packing your work into a zip file to share with the team.</dd>
+<dt>Consent</dt><dd>Your agreement to take part, which you give once when you first sign in.</dd>
+<dt>Reminder</dt><dd>A daily nudge to record, if you ask for one.</dd>
+</dl>
+</article>
+
+<article id="get-started" data-group="Using the app" data-title="Getting started" hidden>
+<div class="crumbs">Using the app</div>
+<h1>Getting started</h1>
+<p class="lead">Five short steps take you from opening the link to recording your first place. You only do steps 1 to 4 once.</p>
+<ol class="steps">
+<li><div><b class="t">Open the link in Chrome</b>Use the link from your project coordinator. Open it in Chrome itself, not inside WhatsApp or another app.</div></li>
+<li><div><b class="t">Add it to your phone (optional)</b>Tap the three-dot menu in Chrome, then <b>Install app</b>. Pappilon now sits on your home screen like any other app.</div></li>
+<li><div><b class="t">Create your account</b>Choose a User ID and a password. Keep them somewhere safe. There is no email recovery.</div></li>
+<li><div><b class="t">Read and sign the consent form</b>Read the information sheet, tick each box that you agree with, and tap submit. Your User ID and today's date become your signature. You are asked only once.</div></li>
+<li><div><b class="t">Start or open a session</b>Give your outing a name, such as "Tuesday morning bus". The map opens and you are ready.</div></li>
+</ol>
+<div class="shot">Screenshot placeholder<small>The sign-up screen with User ID and password<br>Suggested size 400 x 600 px</small></div>
+<div class="shot">Screenshot placeholder<small>The consent form with checkboxes and signature<br>Suggested size 400 x 600 px</small></div>
+<div class="note tip"><span class="lbl">Tip</span><span>Next time, log in with the same User ID and open the same session name to carry on where you stopped.</span></div>
+</article>
+
+<article id="screen-tour" data-group="Using the app" data-title="A tour of the screen" hidden>
+<div class="crumbs">Using the app</div>
+<h1>A tour of the screen</h1>
+<p class="lead">The main screen has four parts. Learn where they are and you will never feel lost.</p>
+<div class="shot">Screenshot placeholder<small>The main screen with the four parts numbered<br>Suggested size 800 x 480 px</small></div>
+<div class="grid">
+<div class="card"><h3>Top bar</h3><p>Shows your saving status, your level, and buttons for Reminder, Insights, and Finish and export.</p></div>
+<div class="card"><h3>Map and list</h3><p>The map shows your places as dots. The list names each one. Tap either to open a place.</p></div>
+<div class="card"><h3>Picture panel</h3><p>The picture of the selected place. Look around, then tap it to drop a pin.</p></div>
+<div class="card"><h3>Tag tab</h3><p>Where you choose a lens, pick an icon, give a score, add tags and a note.</p></div>
+</div>
+<h2>What the dots mean</h2>
+<ul><li>A plain dot is a place you have added but not finished.</li><li>A finished dot is a place you have closed with a gut check.</li><li>The place you are working on is highlighted.</li></ul>
+<div class="note plain"><span class="lbl">Saved</span><span>"Saved" in the top bar means your work is safely in your account. "Offline, will retry" means your phone has no internet. Keep working; it sends later.</span></div>
+</article>
+
+<article id="add-places" data-group="Using the app" data-title="Adding places" hidden>
+<div class="crumbs">Stage 1 · Add</div>
+<h1>Adding places</h1>
+<p class="lead">A place is any spot on your journey you want to describe. You can add one by tapping the map, or by pressing a button while you are standing there.</p>
+<h2>Add a place from the map</h2>
+<ol class="steps">
+<li><div>Zoom the map to where you want the place.</div></li>
+<li><div>Tap the spot. A new place appears in the list and on the map.</div></li>
+<li><div>Give it a short name you will recognise, such as "Station subway".</div></li>
+</ol>
+<h2>Add a place where you stand</h2>
+<p>Tap <b>REPORT</b>. The app uses your phone's location to add a place right where you are. Allow location when your phone asks.</p>
+<div class="shot">Screenshot placeholder<small>The map with a new place and the REPORT button<br>Suggested size 800 x 420 px</small></div>
+<h2>Add many places at once</h2>
+<p>If your coordinator gave you a list of places as a CSV file, use <b>Import</b> to bring them all in together.</p>
+<h2>Delete a place</h2>
+<p>Touch and hold its row in the list, then confirm Delete.</p>
+<div class="note warn"><span class="lbl">The 500 m rule</span><span>Do not record places within 500 metres of your home or workplace.</span></div>
+</article>
+
+<article id="images" data-group="Using the app" data-title="Pictures of places" hidden>
+<div class="crumbs">Stage 2 · Look</div>
+<h1>Pictures of places</h1>
+<p class="lead">Each place needs a picture to pin things onto. Pappilon offers three sources.</p>
+<div class="grid">
+<div class="card"><h3>Street View</h3><p>For outdoor places the app finds the nearest Street View picture automatically.</p></div>
+<div class="card"><h3>Standard interiors</h3><p>For journeys inside a bus, metro or local train, choose a standard Mumbai interior.</p></div>
+<div class="card"><h3>Your own picture</h3><p>Load a photo you took, if it shows no faces and no number plates.</p></div>
+</div>
+<div class="shot">Screenshot placeholder<small>The picture panel with the three source buttons<br>Suggested size 800 x 400 px</small></div>
+<h2>If there is no Street View</h2>
+<p>The app looks within 120 metres. If it finds nothing, tap <b>Search 400 m</b>, or choose a standard interior or your own image.</p>
+<h2>Looking around</h2>
+<p>Drag the picture to turn. Pinch or scroll to zoom. Flat photos can be dragged and zoomed too.</p>
+<div class="note warn"><span class="lbl">Heads-up</span><span>Pictures stay on the phone where you loaded them. Use the same phone to finish and export.</span></div>
+</article>
+
+<article id="pinning" data-group="Using the app" data-title="Pin what you notice" hidden>
+<div class="crumbs">Stage 3 · Pin</div>
+<h1>Pin what you notice</h1>
+<p class="lead">This is the heart of the app. A pin is a small round marker you place on the picture, then describe. Add as many as you like, one for each thing you notice.</p>
+<ol class="steps">
+<li><div><b class="t">Choose a lens</b>Open the Tag tab. Three buttons at the top are lenses, which are different ways of looking. See <a href="#lenses">The three lenses</a>.</div></li>
+<li><div><b class="t">Pick an icon</b>Tap the icon for what you want to describe, such as Light or Staring. On a computer, hover to read a short explanation.</div></li>
+<li><div><b class="t">Tap the picture</b>A round pin lands where you tap. A dashed ring means you have not rated it yet.</div></li>
+<li><div><b class="t">Give it a score</b>Tap one of five faces to say how safe that thing makes the place feel.
+<div class="faces"><span style="background:#f6b9b4">1 Very unsafe</span><span style="background:#f8cfa8">2 Unsafe</span><span style="background:#f3e7a6">3 Mixed</span><span style="background:#cfe8b0">4 Safe</span><span style="background:#a9dcb6">5 Very safe</span></div></div></li>
+<li><div><b class="t">Add tags and a note</b>Tap any tags that fit, or type your own in the <b>+ tag</b> box. Then write a note in your own words, such as "shutters down after 7pm, nowhere to sit".</div></li>
+<li><div><b class="t">Tap "Done with this pin"</b>Your pin is saved. Tap the picture again to add the next one.</div></li>
+</ol>
+<div class="shot">Screenshot placeholder<small>A picture with several pins and the Tag tab beside it<br>Suggested size 800 x 480 px</small></div>
+<h2>Fix or remove a pin</h2>
+<ul><li><b>Move it:</b> press and drag the pin on the picture.</li><li><b>Change it:</b> tap the pin, then pick a different icon or score.</li><li><b>Delete it:</b> tap the pin, then the bin button.</li></ul>
+<h2>When no icon fits</h2>
+<p>Choose <b>Other, describe it</b> and write what is happening in your own words. No score is needed for this one.</p>
+<div class="note plain"><span class="lbl">Plain words</span><span><b>Observe first.</b> Describe what you can see or hear before guessing why someone acted that way. Mark any guess as your interpretation.</span></div>
+</article>
+
+<article id="lenses" data-group="Using the app" data-title="The three lenses" hidden>
+<div class="crumbs">Reference</div>
+<h1>The three lenses and their icons</h1>
+<p class="lead">A lens is a way of looking at a place. Each lens has its own icons. Use whichever icon matches what you notice. You can switch lenses at any time, even for pins on the same picture.</p>
+<div class="lenses">
+<div class="lens" style="--c:#b8235a"><div class="hd" style="background:#b8235a"><b>Lens 1</b><h3>Harassment and unwanted attention</h3></div><div class="bd"><p>Unwanted behaviour towards women and girls.</p><ul><li>Staring or watching</li><li>Catcalling or comments</li><li>Sexual gestures</li><li>Following or trailing</li><li>Blocking or trapping</li><li>Unwanted closeness</li><li>Unwanted touching</li><li>Unwanted photographing</li><li>Sexual exposure</li><li>Threat or intimidation</li><li>Sexual or physical assault</li><li>Repeated harassment</li><li>Response or help</li><li>Effect on movement</li><li>Other, describe it</li></ul></div></div>
+<div class="lens" style="--c:#127a63"><div class="hd" style="background:#127a63"><b>Lens 2</b><h3>Street conditions</h3></div><div class="bd"><p>The surroundings that can make a place feel safer or less safe.</p><ul><li>Places to stay</li><li>People around</li><li>See and be seen</li><li>Light</li><li>Easy to move</li><li>Ways out and help</li><li>Clean and cared for</li><li>Feel welcome</li><li>Useful facilities</li><li>Active edges (shops, vendors)</li><li>Comfort and pleasure</li><li>Other, describe it</li></ul></div></div>
+<div class="lens" style="--c:#5a2fd0"><div class="hd" style="background:#5a2fd0"><b>Lens 3</b><h3>Human behaviour and social response</h3></div><div class="bd"><p>What people nearby do and say. Record what is visible, not guesses about why.</p><ul><li>Peer or group response</li><li>Bystander response</li><li>Target response or impact</li><li>Accountability or deterrence</li><li>Social cues and norms</li><li>Situation or opportunity</li><li>Interaction sequence</li><li>Interpretation, describe it</li></ul></div></div>
+</div>
+<h2>A worked example</h2>
+<ol class="steps">
+<li><div>You walk through a dim underpass. Open <b>Street conditions</b>.</div></li>
+<li><div>Tap the <b>Light</b> icon, then tap the dark spot on the picture.</div></li>
+<li><div>Score it <b>2, Unsafe</b>. Tag it <b>Dark patch</b> and <b>Broken light</b>.</div></li>
+<li><div>Note: "Two lamps are out, I walked faster here."</div></li>
+</ol>
+<div class="shot">Screenshot placeholder<small>The three lens buttons and icon grid in the Tag tab<br>Suggested size 800 x 400 px</small></div>
+<div class="note plain"><span class="lbl">Plain words</span><span>You do not have to use every icon. Pick only the ones that match what you actually noticed.</span></div>
+</article>
+
+<article id="finish-export" data-group="Using the app" data-title="Finish and send off" hidden>
+<div class="crumbs">Stages 4 and 5 · Settle and send off</div>
+<h1>Finish a place, then send it off</h1>
+<p class="lead">When you have pinned what you want to say about a place, you close it with one last question. When your outing is over, you pack everything up to share.</p>
+<h2>Settle: finish the place</h2>
+<ol class="steps">
+<li><div><b class="t">Do the gut check</b>At the bottom of the Tag tab, tap the face that matches how safe the <b>whole place</b> feels, from 1 (very unsafe) to 5 (very safe).</div></li>
+<li><div><b class="t">Tap "Complete point and next"</b>The place turns into a finished dot on the map, you earn points, and the app takes you to your next unfinished place.</div></li>
+<li><div><b class="t">Changed your mind?</b>Open the place and tap <b>Reopen this point</b>. You can then add pins or change ratings.</div></li>
+</ol>
+<div class="shot">Screenshot placeholder<small>Gut check faces and the Complete button<br>Suggested size 800 x 400 px</small></div>
+<h2>Levels and Insights</h2>
+<p>Pins, tags, notes and finished places earn points that move you up the levels in the top bar: Curious Walker, Street Scout, Sightline Sleuth, Lantern Bearer, City Cartographer and Right-to-Loiter Legend. It is only friendly encouragement. The <b>Insights</b> button shows which themes you rated lowest, the tags you used most, and the places that felt least safe to you.</p>
+<h2>Send off: export your work</h2>
+<ol class="steps">
+<li><div>Tap <b>Finish and export</b> in the top bar.</div></li>
+<li><div>Tap <b>Build my .zip</b>. The app draws your pins onto each picture and packs a zip file with the annotated pictures, a list of every pin and a list of every place.</div></li>
+<li><div>Choose how to share: <b>Share</b> (WhatsApp, email and more on a phone), <b>Download</b>, <b>Email</b>, <b>WhatsApp</b>, or a <b>private link</b> that works for 7 days.</div></li>
+<li><div>Send it to whoever your project coordinator told you to.</div></li>
+</ol>
+<div class="shot">Screenshot placeholder<small>The Finish and export window with share buttons<br>Suggested size 800 x 420 px</small></div>
+<div class="note warn"><span class="lbl">Heads-up</span><span>Pictures stay on the phone where you loaded them. Export on that same phone, or places whose pictures are missing will be left out.</span></div>
+</article>
+
+<article id="reminders" data-group="Good habits" data-title="Daily reminders" hidden>
+<div class="crumbs">Good habits</div>
+<h1>Daily reminders</h1>
+<p class="lead">A small daily nudge can help you remember to record.</p>
+<ol class="steps">
+<li><div>Tap the bell button, <b>Reminder</b>, in the top bar.</div></li>
+<li><div>Choose the time you would like to be reminded.</div></li>
+<li><div>Tap <b>Turn on reminder</b>. If your phone asks about notifications, tap <b>Allow</b>.</div></li>
+<li><div>Tap <b>Send test</b> to check it works. Turn it off any time from the same window.</div></li>
+</ol>
+<div class="shot">Screenshot placeholder<small>The Daily reminder window<br>Suggested size 500 x 470 px</small></div>
+<p>If you have not recorded anything that day (a place, a pin, a rating or a finished place), you get a nudge after your chosen time, and a prompt when you open the app. Once you record something, it stays quiet until tomorrow.</p>
+<div class="note warn"><span class="lbl">Heads-up</span><span>Reminders work best when Pappilon is installed on your phone. If the app has been closed for a long time, Android may delay or skip one. If notifications are blocked, allow them in Chrome's site settings.</span></div>
+</article>
+
+<article id="safety" data-group="Good habits" data-title="Safety and privacy" hidden>
+<div class="crumbs">Good habits</div>
+<h1>Staying safe and private</h1>
+<p class="lead">Just as important as recording is keeping yourself and your privacy safe while you take part.</p>
+<div class="grid">
+<div class="card"><h3>Your safety comes first</h3><p>Use the app only when it is safe to. Stop walking or step aside before you record. If you feel unsafe, put the phone away.</p></div>
+<div class="card"><h3>The 500 m rule</h3><p>Do not record places within 500 metres of your home or workplace.</p></div>
+<div class="card"><h3>No identifying details</h3><p>Do not write names, phone numbers or number plates, and do not use photos that show faces.</p></div>
+<div class="card"><h3>Record only what is safe to document</h3><p>For serious incidents, note only what is appropriate and safe. You never have to describe more than you want to.</p></div>
+<div class="card"><h3>It is your choice</h3><p>Taking part is voluntary. You can stop at any time without any consequences.</p></div>
+<div class="card"><h3>Not an emergency tool</h3><p>Pappilon does not alert anyone. In an emergency call <b>112</b>. Women's helpline: <b>181</b>. Railway helpline: <b>139</b>.</p></div>
+</div>
+<h2>Who to contact</h2>
+<p>Principal Investigator Gautam Parwar: gautam.parwar@iitb.ac.in, +91 9823093980. Ethics board (IIT Bombay IRB): irb@ircc.iitb.ac.in.</p>
+</article>
+
+<article id="help" data-group="Good habits" data-title="Help and FAQ" hidden>
+<div class="crumbs">Help</div>
+<h1>When something does not go to plan</h1>
+<p class="lead">Most problems have a quick fix. The question-mark button in the top bar also opens a short built-in help.</p>
+<dl>
+<dt>I forgot my password.</dt><dd>Ask your project coordinator to reset it. There is no email recovery, so keep your User ID somewhere safe.</dd>
+<dt>The top bar says "Offline, will retry".</dt><dd>Your phone has no internet right now. Keep working. The app sends everything when the connection returns.</dd>
+<dt>The picture is missing on a new phone.</dt><dd>Pictures stay on the phone where you loaded them. Open the place and load the picture again. Your pins are safe in your account.</dd>
+<dt>It says "No Street View within 120 m".</dt><dd>Tap Search 400 m, or choose a standard bus, metro or train interior, or one of your own images.</dd>
+<dt>Nothing happens when I tap the picture.</dt><dd>Wait for the picture to finish loading and make sure a place is selected in the list.</dd>
+<dt>The REPORT button cannot find me.</dt><dd>Allow location when your phone asks. If you said no before, allow it in Chrome's site settings, and make sure your phone's location is switched on.</dd>
+<dt>I cannot install the app.</dt><dd>Open the link in Chrome itself, not inside another app. Reload the page once, then use the three-dot menu and tap Install app.</dd>
+<dt>I added a place by mistake.</dt><dd>Touch and hold its row in the list, then confirm Delete.</dd>
+<dt>I dropped a pin by accident.</dt><dd>Tap the pin, then tap the bin button. On a computer you can also press <kbd>Del</kbd>.</dd>
+<dt>Where is my work?</dt><dd>"Saved" in the top bar means it is in your account. On another device, log in with the same User ID and open the same session name.</dd>
+</dl>
+<h2>Keyboard shortcuts (computer)</h2>
+<div class="tblwrap"><table><tr><th>Keys</th><th>What they do</th></tr>
+<tr><td><kbd>1</kbd> to <kbd>5</kbd></td><td>Give the selected pin a score</td></tr>
+<tr><td><kbd>Del</kbd></td><td>Delete the selected pin</td></tr>
+<tr><td><kbd>Esc</kbd></td><td>Deselect the pin</td></tr>
+<tr><td><kbd>N</kbd> <kbd>P</kbd></td><td>Next or previous place</td></tr>
+<tr><td><kbd>D</kbd></td><td>Complete or reopen the place</td></tr></table></div>
+<div class="note plain"><span class="lbl">Still stuck?</span><span>Write to your project coordinator, or to Gautam Parwar at gautam.parwar@iitb.ac.in. Tell them what you tapped and what you saw on the screen.</span></div>
+</article>
+
+<article id="licence" data-group="About" data-title="Licence and credits" hidden>
+<div class="crumbs">Public domain</div>
+<h1>Licence and credits</h1>
+<p class="lead">Pappilon is dedicated to the public domain. Anyone may use it, copy it, change it and share it, for any purpose, with no need to ask permission or give credit.</p>
+<div class="card" style="margin-bottom:16px"><h3>Creative Commons Zero 1.0 Universal (CC0 1.0)</h3><p>To the extent possible under law, <span class="ph">COPYRIGHT HOLDER</span> has waived all copyright and related rights to Pappilon. Source code: <span class="ph">REPOSITORY URL</span>. SPDX identifier: CC0-1.0.</p></div>
+<h2>In plain words, you are free to</h2>
+<ul><li><b>Use it</b> for any purpose, including research or commercial work.</li><li><b>Study it.</b> The full source code is available to everyone.</li><li><b>Share it.</b> Pass copies to others, free or for a fee.</li><li><b>Change it</b> and keep your changes private or share them. Both are fine.</li></ul>
+<div class="grid">
+<div class="card"><h3>What you must do</h3><p>Nothing is required for Pappilon itself. Other software it uses has its own licences, listed below, and those may ask you to keep their notices. Please also keep any real participant data safe and follow your own ethics approval.</p></div>
+<div class="card"><h3>What it does not cover</h3><p>CC0 covers the software and documentation. It does not give anyone the right to the data participants record, which is protected by the consent form. It does not grant any patent or trademark rights, and there is no warranty: the software is provided as it is.</p></div>
+</div>
+<h2>Credits to other software</h2>
+<div class="tblwrap"><table><tr><th>Component</th><th>Used for</th><th>Licence</th></tr>
+<tr><td><b>Leaflet</b></td><td>The map</td><td>BSD 2-Clause</td></tr>
+<tr><td><b>Photo Sphere Viewer</b></td><td>360 and flat picture viewing</td><td>MIT</td></tr>
+<tr><td><b>PapaParse</b></td><td>Reading and writing CSV lists</td><td>MIT</td></tr>
+<tr><td><b>JSZip</b></td><td>Packing the export zip file</td><td>MIT or GPL v3</td></tr>
+<tr><td><b>Supabase</b></td><td>Accounts and storage of records</td><td>Hosted service, its own terms</td></tr>
+<tr><td><b>CARTO basemap</b></td><td>Map background</td><td>© OpenStreetMap contributors, © CARTO</td></tr>
+<tr><td><b>Google Street View</b></td><td>Street-level pictures</td><td>Google's terms of service</td></tr></table></div>
+<div class="note plain"><span class="lbl">Pictures</span><span>Pictures you load stay your own. Only share ones you took or have permission to use. Standard bus, metro and train interiors carry the licence of whoever made them: <span class="ph">IMAGE LICENCE</span>.</span></div>
+<div class="note warn"><span class="lbl">Please check</span><span>This page is a plain summary, not legal advice. The full legal text is at creativecommons.org/publicdomain/zero/1.0/legalcode and should be included as a LICENSE file with the source. Confirm third-party licences and your institution's rules before release.</span></div>
+</article>
+
+<div class="pager" id="pager"></div>
+</main>
+</div>
+
+<script>
+(function(){
+  var arts=[].slice.call(document.querySelectorAll('article'));
+  var nav=document.getElementById('nav'), q=document.getElementById('q');
+  var side=document.getElementById('side'), menuBtn=document.getElementById('menuBtn');
+  var pager=document.getElementById('pager');
+  var lastGroup='';
+  arts.forEach(function(a){
+    var g=a.dataset.group;
+    if(g!==lastGroup){var h=document.createElement('h6');h.textContent=g;h.dataset.g=g;nav.appendChild(h);lastGroup=g;}
+    var l=document.createElement('a');l.href='#'+a.id;l.textContent=a.dataset.title;l.dataset.id=a.id;l.dataset.g=g;
+    l.dataset.text=(a.dataset.title+' '+a.textContent).toLowerCase();
+    nav.appendChild(l);
+  });
+  var links=[].slice.call(nav.querySelectorAll('a'));
+  function show(){
+    var id=(location.hash||'#welcome').slice(1);
+    if(!arts.some(function(a){return a.id===id;}))id='welcome';
+    var idx=0;
+    arts.forEach(function(a,i){var on=a.id===id;a.hidden=!on;if(on)idx=i;});
+    links.forEach(function(l){if(l.dataset.id===id)l.setAttribute('aria-current','page');else l.removeAttribute('aria-current');});
+    var p=arts[idx-1],n=arts[idx+1],h='';
+    if(p)h+='<a class="btn" href="#'+p.id+'">&larr; '+p.dataset.title+'</a>';else h+='<span></span>';
+    if(n)h+='<a class="btn" href="#'+n.id+'">'+n.dataset.title+' &rarr;</a>';
+    pager.innerHTML=h;
+    document.title=arts[idx].dataset.title+' | Pappilon Wiki';
+    window.scrollTo(0,0);
+    side.classList.remove('open');menuBtn.setAttribute('aria-expanded','false');
+  }
+  window.addEventListener('hashchange',show);show();
+  q.addEventListener('input',function(){
+    var t=q.value.trim().toLowerCase(),any=false,groups={};
+    links.forEach(function(l){var m=!t||l.dataset.text.indexOf(t)>-1;l.hidden=!m;if(m){groups[l.dataset.g]=1;any=true;}});
+    [].slice.call(nav.querySelectorAll('h6')).forEach(function(h){h.hidden=!groups[h.dataset.g];});
+    var nr=document.getElementById('nr');
+    if(!any){if(!nr){nr=document.createElement('div');nr.id='nr';nr.className='noresults';nr.textContent='No pages match that search.';nav.appendChild(nr);}}
+    else if(nr)nr.remove();
+  });
+  menuBtn.addEventListener('click',function(){var o=side.classList.toggle('open');menuBtn.setAttribute('aria-expanded',String(o));});
+  document.getElementById('themeBtn').addEventListener('click',function(){
+    var r=document.documentElement,dark=r.dataset.theme?r.dataset.theme==='dark':matchMedia('(prefers-color-scheme: dark)').matches;
+    r.dataset.theme=dark?'light':'dark';
+  });
+})();
+</script>
+
+</body>
+</html>
