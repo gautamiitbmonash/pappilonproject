@@ -60,5 +60,5 @@ This does not cover logos, photographs or the standard interior images, which be
 ## Contact
 
 Questions about the study: gautam.parwar@iitb.ac.in
-Website issues: please use the GitHub Issues tab.
+Website issues: please use the GitHub Issues tab and reddit forum at https://www.reddit.com/r/Pappilonproject/
 
