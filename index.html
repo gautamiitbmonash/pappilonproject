@@ -346,7 +346,7 @@ footer p{margin:0 0 6px;max-width:36em}
 (function(){
   /* SETTINGS: edit these lines. */
   var VIDEO={type:'',src:''};      // type 'youtube' with an embed URL, or 'file' with an .mp4 path. Or just drop videos/intro.mp4
-  var LINKS={app:'index.html',wiki:'wiki.html',guide:'user-guide.pdf',source:'#'};
+  var LINKS={app:'https://gautamiitbmonash.github.io/pappilon/',wiki:'wiki.html',guide:'user-guide.pdf',source:'#'};
   /* Auto-detect videos/intro.mp4 when VIDEO is empty */
   if(!VIDEO.src){var pv=document.createElement('video');pv.preload='metadata';pv.onloadedmetadata=function(){VIDEO={type:'file',src:'videos/intro.mp4'};var t=document.querySelector('#video .ph');if(t)t.hidden=true;};pv.src='videos/intro.mp4';}
   /* Auto-detect images/poster.jpg (or png, webp) as the video poster */
