@@ -345,10 +345,11 @@ footer p{margin:0 0 6px;max-width:36em}
 <script>
 (function(){
   /* SETTINGS: edit these lines. */
-  var VIDEO={type:'',src:''};      // type 'youtube' with an embed URL, or 'file' with an .mp4 path. Or just drop videos/intro.mp4
+  /*var VIDEO={type:'',src:''};      // type 'youtube' with an embed URL, or 'file' with an .mp4 path. Or just drop videos/intro.mp4*/
+  var VIDEO={type:'youtube',src:'https://www.youtube.com/embed/TTO-njn_NSo'};
   var LINKS={app:'https://gautamiitbmonash.github.io/pappilon/',wiki:'wiki.html',guide:'user-guide.pdf',source:'#'};
   /* Auto-detect videos/intro.mp4 when VIDEO is empty */
-  if(!VIDEO.src){var pv=document.createElement('video');pv.preload='metadata';pv.onloadedmetadata=function(){VIDEO={type:'file',src:'videos/intro.mp4'};var t=document.querySelector('#video .ph');if(t)t.hidden=true;};pv.src='videos/intro.mp4';}
+  if(!VIDEO.src){var pv=document.createElement('video');pv.preload='metadata';pv.onloadedmetadata=function(){VIDEO={type:'youtube',src:'https://www.youtube.com/embed/TTO-njn_NSo'};var t=document.querySelector('#video .ph');if(t)t.hidden=true;};pv.src='videos/intro.mp4';}
   /* Auto-detect images/poster.jpg (or png, webp) as the video poster */
   (function(){var ex=['jpg','jpeg','png','webp'],bx=document.getElementById('video');(function t(i){if(i>=ex.length)return;var im=new Image();im.onload=function(){bx.style.backgroundImage='linear-gradient(rgba(29,15,46,.35),rgba(29,15,46,.35)),url('+im.src+')';bx.style.backgroundSize='cover';bx.style.backgroundPosition='center';};im.onerror=function(){t(i+1);};im.src='images/poster.'+ex[i];})(0);})();
   document.querySelectorAll('[data-link]').forEach(function(a){a.setAttribute('href',LINKS[a.dataset.link]||'#');});
